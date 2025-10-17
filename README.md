@@ -1,14 +1,17 @@
-# Autofaucet para Freebitco.in
+# Autofaucet para Freebitco.in con Notificaciones de Telegram
 
-Este script automatiza el proceso de reclamar satoshis gratis del sitio web [freebitco.in](https://freebitco.in/). Es una herramienta de línea de comandos diseñada para ser ejecutada en un ordenador personal o en un servidor para reclamar recompensas automáticamente cada hora.
+Este script automatiza el proceso de reclamar satoshis gratis del sitio web [freebitco.in](https://freebitco.in/) y te notifica sobre su estado a través de un bot de Telegram. Es una herramienta de línea de comandos diseñada para ser ejecutada 24/7 en un servidor o en un ordenador de bajo consumo.
 
-**Nota Importante:** Este es un script de línea de comandos, no una aplicación móvil. Crear una aplicación móvil es una tarea significativamente más compleja, y este script proporciona una solución más directa y factible para automatizar el proceso.
+**Nota Importante:** Este es un script de línea de comandos, no una aplicación móvil. Integrarlo con Telegram te da la ventaja de recibir notificaciones en tu móvil, que es la solución más práctica y eficiente para monitorear el proceso.
 
 ## Características
 
--   Reclama BTC gratis automáticamente cada hora.
--   Calcula el tiempo restante hasta la próxima reclamación.
--   Utiliza una huella digital de navegador (fingerprint) para simular ser un usuario real.
+-   Reclama BTC gratis automáticamente.
+-   Espera un **intervalo de tiempo aleatorio** (entre 61 y 67 minutos) para simular un comportamiento humano y evitar ser detectado.
+-   **Te notifica por Telegram** cuando:
+    -   El bot se inicia correctamente.
+    -   La reclamación de BTC es exitosa (incluyendo tu nuevo saldo).
+    -   Ocurre un error o fallo.
 -   Almacena tus credenciales de forma segura usando variables de entorno.
 
 ## Prerrequisitos
@@ -27,73 +30,72 @@ Este script automatiza el proceso de reclamar satoshis gratis del sitio web [fre
 
 ## Configuración
 
-Para usar este script, necesitas proporcionar tus credenciales de freebitco.in como variables de entorno. Esta es una buena práctica de seguridad que evita escribir tu información sensible directamente en el script.
+Para usar este script, necesitas proporcionar tus credenciales como variables de entorno.
 
-### ¿Por qué no usar usuario y contraseña?
+### Parte 1: Credenciales de Freebitco.in
 
-Este script utiliza un método de autenticación basado en cookies en lugar de un inicio de sesión directo con usuario y contraseña. La razón es que un inicio de sesión directo activaría un captcha, que es una medida de seguridad diseñada para bloquear bots. Resolver el captcha de forma programada es una tarea muy compleja y está fuera del alcance de este script. Al usar las cookies de una sesión de inicio de sesión activa, podemos evitar el captcha y automatizar el proceso de reclamación.
+#### ¿Por qué no usar usuario y contraseña?
 
-La principal desventaja de este método es que las cookies eventualmente expirarán, y necesitarás repetir el proceso para obtenerlas de nuevo.
+Este script utiliza un método de autenticación basado en cookies porque un inicio de sesión directo activaría un captcha (un test para diferenciar humanos de bots), que es muy difícil de automatizar. Usando las cookies de una sesión activa, evitamos este problema. La única desventaja es que las cookies expiran con el tiempo y tendrás que obtenerlas de nuevo.
 
-### Cómo obtener tus credenciales:
+#### Cómo obtener las credenciales de Freebitco.in:
 
-#### 1. `FBTC_COOKIE`
+1.  **`FBTC_COOKIE`**:
+    -   Inicia sesión en [freebitco.in](https://freebitco.in/) en tu navegador.
+    -   Abre las herramientas de desarrollador (`F12`), ve a la pestaña **Network** (o **Red**), y refresca la página.
+    -   Haz clic en cualquier solicitud, ve a la sección de **Request Headers** (o **Encabezados de la solicitud**) y copia el valor completo del campo `Cookie`.
 
-Es el texto que contiene las cookies de tu cuenta. Para obtenerlo:
+2.  **`FBTC_CSRF_TOKEN`**:
+    -   En la página de [freebitco.in](https://freebitco.in/), haz clic derecho y selecciona **Ver código fuente de la página**.
+    -   Busca (`Ctrl+F`) `csrf_token` y copia su valor.
 
-1.  Inicia sesión en [freebitco.in](https://freebitco.in/) en tu navegador.
-2.  Abre las herramientas de desarrollador (normalmente con la tecla `F12`).
-3.  Ve a la pestaña **Network** (o **Red**).
-4.  Refresca la página.
-5.  Haz clic en cualquier solicitud de la lista (por ejemplo, la primera).
-6.  En la sección de **Headers** (o **Encabezados**), busca los **Request Headers** (o **Encabezados de la solicitud**) y copia el valor completo del campo `Cookie`.
+3.  **`FBTC_USER_ID`**:
+    -   En el código fuente de la página, busca `user_id` y copia su valor.
 
-#### 2. `FBTC_CSRF_TOKEN`
+### Parte 2: Credenciales del Bot de Telegram
 
-Es tu token de seguridad CSRF. Para obtenerlo:
+#### Cómo crear tu bot y obtener las credenciales:
 
-1.  Inicia sesión en [freebitco.in](https://freebitco.in/).
-2.  Haz clic derecho en la página y selecciona **Ver código fuente de la página**.
-3.  Busca `csrf_token` y copia su valor.
+1.  **`TELEGRAM_BOT_TOKEN`**:
+    -   Abre Telegram y busca a un bot llamado **`@BotFather`** (es el bot oficial de Telegram para crear otros bots).
+    -   Inicia una conversación con él y envíale el comando `/newbot`.
+    -   Sigue sus instrucciones: te pedirá un nombre para tu bot y luego un "username" (que debe terminar en `bot`).
+    -   Al final, te dará un **token de acceso HTTP API**. Cópialo. Ese es tu `TELEGRAM_BOT_TOKEN`.
 
-#### 3. `FBTC_USER_ID`
+2.  **`TELEGRAM_CHAT_ID`**:
+    -   Busca a otro bot en Telegram llamado **`@userinfobot`**.
+    -   Inicia una conversación con él y te enviará un mensaje con tu información.
+    -   Copia el número que aparece junto a **`Id:`**. Ese es tu `TELEGRAM_CHAT_ID`.
+    -   Ahora, busca el bot que creaste en el paso anterior e inicia una conversación con él (envíale cualquier mensaje). Esto es necesario para que tu bot pueda enviarte mensajes.
 
-Es tu ID de usuario único. Para obtenerlo:
-
-1.  Inicia sesión en [freebitco.in](https://freebitco.in/).
-2.  Haz clic derecho en la página y selecciona **Ver código fuente de la página**.
-3.  Busca `user_id` y copia su valor.
-
-### Cómo configurar las Variables de Entorno
-
-Puedes configurar estas variables en tu terminal antes de ejecutar el script.
+### Parte 3: Configurar las Variables de Entorno
 
 **En Linux o macOS:**
-
 ```bash
 export FBTC_COOKIE="tu_cadena_de_cookie"
 export FBTC_CSRF_TOKEN="tu_token_csrf"
 export FBTC_USER_ID="tu_id_de_usuario"
+export TELEGRAM_BOT_TOKEN="tu_token_de_telegram"
+export TELEGRAM_CHAT_ID="tu_id_de_chat_de_telegram"
 ```
 
 **En Windows:**
-
 ```powershell
 $env:FBTC_COOKIE="tu_cadena_de_cookie"
 $env:FBTC_CSRF_TOKEN="tu_token_csrf"
 $env:FBTC_USER_ID="tu_id_de_usuario"
+$env:TELEGRAM_BOT_TOKEN="tu_token_de_telegram"
+$env:TELEGRAM_CHAT_ID="tu_id_de_chat_de_telegram"
 ```
 
 ## Uso
 
-Una vez que hayas instalado las dependencias y configurado tus credenciales, puedes ejecutar el script con el siguiente comando:
-
+Una vez configurado todo, ejecuta el script:
 ```bash
 python autofaucet.py
 ```
-
-El script iniciará sesión, reclamará tus BTC gratis y esperará el período de enfriamiento adecuado antes de repetir el proceso.
+El script se ejecutará en un bucle infinito, reclamando y notificándote. Para que corra 24/7, te recomiendo usarlo en un servidor (VPS) o una Raspberry Pi.
 
 ## Descargo de Responsabilidad
 
-Este script es solo para fines educativos. El uso de bots o scripts automatizados puede estar en contra de los términos de servicio de freebitco.in. Usa este script bajo tu propio riesgo.
+Este script es solo para fines educativos. El uso de bots puede estar en contra de los términos de servicio de freebitco.in. Úsalo bajo tu propio riesgo.
