@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from urllib.parse import quote
 import os
+import random
 
 # --- Constants and Configuration ---
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36'
@@ -87,14 +88,19 @@ def login():
 
 def claim_free_btc():
     """
-    Claims the free BTC from the website and returns the cooldown period.
+    Claims the free BTC from the website and returns True on success, False on failure.
     """
     print("Attempting to claim free BTC...")
     try:
+        # Check if the roll is available first
         with requests.Session() as s:
-            # Get the client seed from the homepage
             r = s.get("https://freebitco.in/?op=home", headers=headers, timeout=10)
             r.raise_for_status()
+            # If the free play button is not found, it means we are in cooldown
+            if not r.text.find('free_play_form_button'):
+                 print("Claim is not available yet. Waiting for the next cycle.")
+                 return False
+
             soup = BeautifulSoup(r.content, 'lxml')
             client_seed = soup.find(id='next_client_seed')['value']
 
@@ -104,7 +110,7 @@ def claim_free_btc():
                 'op': 'free_play',
                 'fingerprint': fingerprint(),
                 'client_seed': client_seed,
-                'fingerprint2': '4036898993',  # This can be a random number
+                'fingerprint2': str(random.randint(1000000000,9999999999)),
                 'pwc': '0',
             }
             roll = s.post('https://freebitco.in/', data=data, headers=headers, timeout=10)
@@ -112,37 +118,34 @@ def claim_free_btc():
 
             if roll.text.startswith('s'):
                 print("Successfully claimed free BTC!")
+                return True
             else:
-                print("Failed to claim free BTC.")
-
-            # Calculate and return the cooldown period
-            try:
-                # The response is in the format "s:xxxxxx:xxxxxx", where the second number is the remaining time
-                parts = roll.text.split(':')
-                if len(parts) > 1 and parts[1].isdigit():
-                    remaining_time = int(parts[1]) + 5  # Add a 5-second buffer
-                    print(f"Next claim available in {remaining_time // 60} minutes and {remaining_time % 60} seconds.")
-                    return remaining_time
-                else:
-                    raise ValueError("Invalid response format for cooldown.")
-            except (IndexError, ValueError) as e:
-                print(f"Could not determine the cooldown period: {e}. Defaulting to 1 hour and 5 minutes.")
-                return 3900  # 1 hour and 5 minutes in seconds
+                print("Failed to claim free BTC. The button might not be ready.")
+                return False
 
     except requests.exceptions.RequestException as e:
         print(f"An error occurred while claiming BTC: {e}")
-        return 3900
+        return False
     except (AttributeError, TypeError, KeyError):
         print("Could not find the client seed or other required elements. The website structure may have changed.")
-        return 3900
+        return False
 
 
 if __name__ == "__main__":
     try:
         if login():
             while True:
-                cooldown = claim_free_btc()
-                print(f"Waiting for {cooldown} seconds before the next claim...")
+                success = claim_free_btc()
+                if success:
+                    # On successful claim, wait for a random interval between 61 and 67 minutes
+                    cooldown = random.randint(61 * 60, 67 * 60)
+                    print(f"Claim successful. Waiting for a random interval.")
+                else:
+                    # If claim fails (e.g., not available yet, or an error), wait 5 minutes before retrying
+                    cooldown = 5 * 60
+                    print(f"Claim failed or not available. Retrying in 5 minutes.")
+
+                print(f"Next attempt in {cooldown // 60} minutes and {cooldown % 60} seconds.")
                 time.sleep(cooldown)
     except ScriptError as e:
         print(f"Error: {e}")

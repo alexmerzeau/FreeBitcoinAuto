@@ -1,99 +1,99 @@
-# Freebitco.in Autofaucet
+# Autofaucet para Freebitco.in
 
-This script automates the process of claiming free satoshis from the [freebitco.in](https://freebitco.in/) website. It is a command-line tool designed to be run on a personal computer or a server to claim rewards automatically every hour.
+Este script automatiza el proceso de reclamar satoshis gratis del sitio web [freebitco.in](https://freebitco.in/). Es una herramienta de línea de comandos diseñada para ser ejecutada en un ordenador personal o en un servidor para reclamar recompensas automáticamente cada hora.
 
-**Important Note:** This is a command-line script, not a mobile application. Creating a mobile app is a significantly more complex task, and this script provides a more direct and achievable solution for automating the process.
+**Nota Importante:** Este es un script de línea de comandos, no una aplicación móvil. Crear una aplicación móvil es una tarea significativamente más compleja, y este script proporciona una solución más directa y factible para automatizar el proceso.
 
-## Features
+## Características
 
--   Automatically claims free BTC every hour.
--   Calculates the remaining time until the next claim.
--   Uses a browser fingerprint to mimic a real user.
--   Securely stores your credentials using environment variables.
+-   Reclama BTC gratis automáticamente cada hora.
+-   Calcula el tiempo restante hasta la próxima reclamación.
+-   Utiliza una huella digital de navegador (fingerprint) para simular ser un usuario real.
+-   Almacena tus credenciales de forma segura usando variables de entorno.
 
-## Prerequisites
+## Prerrequisitos
 
--   Python 3.6 or higher
--   The `requests`, `beautifulsoup4`, and `lxml` libraries
+-   Python 3.6 o superior.
+-   Las librerías `requests`, `beautifulsoup4` y `lxml`.
 
-## Installation
+## Instalación
 
-1.  **Clone the repository or download the files.**
+1.  **Clona el repositorio o descarga los archivos.**
 
-2.  **Install the required libraries:**
+2.  **Instala las librerías requeridas:**
     ```bash
     pip install requests beautifulsoup4 lxml
     ```
 
-## Configuration
+## Configuración
 
-To use this script, you need to provide your freebitco.in credentials as environment variables. This is a security best practice that avoids hardcoding your sensitive information in the script.
+Para usar este script, necesitas proporcionar tus credenciales de freebitco.in como variables de entorno. Esta es una buena práctica de seguridad que evita escribir tu información sensible directamente en el script.
 
-### Why not username and password?
+### ¿Por qué no usar usuario y contraseña?
 
-This script uses a cookie-based authentication method instead of a direct login with a username and password. This is because a direct login would trigger a captcha, which is a security measure designed to block bots. Solving the captcha programmatically is a very complex task and is beyond the scope of this script. By using the cookies from an active login session, we can bypass the captcha and automate the claiming process.
+Este script utiliza un método de autenticación basado en cookies en lugar de un inicio de sesión directo con usuario y contraseña. La razón es que un inicio de sesión directo activaría un captcha, que es una medida de seguridad diseñada para bloquear bots. Resolver el captcha de forma programada es una tarea muy compleja y está fuera del alcance de este script. Al usar las cookies de una sesión de inicio de sesión activa, podemos evitar el captcha y automatizar el proceso de reclamación.
 
-The main drawback of this method is that the cookies will eventually expire, and you will need to repeat the process of obtaining them.
+La principal desventaja de este método es que las cookies eventualmente expirarán, y necesitarás repetir el proceso para obtenerlas de nuevo.
 
-### How to get your credentials:
+### Cómo obtener tus credenciales:
 
-### 1. `FBTC_COOKIE`
+#### 1. `FBTC_COOKIE`
 
-Your account's cookie string. To get this:
+Es el texto que contiene las cookies de tu cuenta. Para obtenerlo:
 
-1.  Log in to [freebitco.in](https://freebitco.in/) in your browser.
-2.  Open the developer tools (usually by pressing `F12`).
-3.  Go to the **Network** tab.
-4.  Refresh the page.
-5.  Click on any request in the list (e.g., the first one).
-6.  In the **Headers** section, find the **Request Headers** and copy the entire value of the `Cookie` header.
+1.  Inicia sesión en [freebitco.in](https://freebitco.in/) en tu navegador.
+2.  Abre las herramientas de desarrollador (normalmente con la tecla `F12`).
+3.  Ve a la pestaña **Network** (o **Red**).
+4.  Refresca la página.
+5.  Haz clic en cualquier solicitud de la lista (por ejemplo, la primera).
+6.  En la sección de **Headers** (o **Encabezados**), busca los **Request Headers** (o **Encabezados de la solicitud**) y copia el valor completo del campo `Cookie`.
 
-### 2. `FBTC_CSRF_TOKEN`
+#### 2. `FBTC_CSRF_TOKEN`
 
-Your account's Cross-Site Request Forgery (CSRF) token. To get this:
+Es tu token de seguridad CSRF. Para obtenerlo:
 
-1.  Log in to [freebitco.in](https://freebitco.in/).
-2.  Right-click on the page and select **View Page Source**.
-3.  Search for `csrf_token` and copy its value.
+1.  Inicia sesión en [freebitco.in](https://freebitco.in/).
+2.  Haz clic derecho en la página y selecciona **Ver código fuente de la página**.
+3.  Busca `csrf_token` y copia su valor.
 
-### 3. `FBTC_USER_ID`
+#### 3. `FBTC_USER_ID`
 
-Your unique user ID. To get this:
+Es tu ID de usuario único. Para obtenerlo:
 
-1.  Log in to [freebitco.in](https://freebitco.in/).
-2.  Right-click on the page and select **View Page Source**.
-3.  Search for `user_id` and copy its value.
+1.  Inicia sesión en [freebitco.in](https://freebitco.in/).
+2.  Haz clic derecho en la página y selecciona **Ver código fuente de la página**.
+3.  Busca `user_id` y copia su valor.
 
-### Setting the Environment Variables
+### Cómo configurar las Variables de Entorno
 
-You can set these environment variables in your terminal before running the script.
+Puedes configurar estas variables en tu terminal antes de ejecutar el script.
 
-**On Linux or macOS:**
+**En Linux o macOS:**
 
 ```bash
-export FBTC_COOKIE="your_cookie_string"
-export FBTC_CSRF_TOKEN="your_csrf_token"
-export FBTC_USER_ID="your_user_id"
+export FBTC_COOKIE="tu_cadena_de_cookie"
+export FBTC_CSRF_TOKEN="tu_token_csrf"
+export FBTC_USER_ID="tu_id_de_usuario"
 ```
 
-**On Windows:**
+**En Windows:**
 
 ```powershell
-$env:FBTC_COOKIE="your_cookie_string"
-$env:FBTC_CSRF_TOKEN="your_csrf_token"
-$env:FBTC_USER_ID="your_user_id"
+$env:FBTC_COOKIE="tu_cadena_de_cookie"
+$env:FBTC_CSRF_TOKEN="tu_token_csrf"
+$env:FBTC_USER_ID="tu_id_de_usuario"
 ```
 
-## Usage
+## Uso
 
-Once you have installed the dependencies and configured your credentials, you can run the script with the following command:
+Una vez que hayas instalado las dependencias y configurado tus credenciales, puedes ejecutar el script con el siguiente comando:
 
 ```bash
 python autofaucet.py
 ```
 
-The script will then log in, claim your free BTC, and wait for the appropriate cooldown period before repeating the process.
+El script iniciará sesión, reclamará tus BTC gratis y esperará el período de enfriamiento adecuado antes de repetir el proceso.
 
-## Disclaimer
+## Descargo de Responsabilidad
 
-This script is for educational purposes only. The use of bots or automated scripts may be against the terms of service of freebitco.in. Use this script at your own risk.
+Este script es solo para fines educativos. El uso de bots o scripts automatizados puede estar en contra de los términos de servicio de freebitco.in. Usa este script bajo tu propio riesgo.
